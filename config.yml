@@ -1,0 +1,38 @@
+# 定义Rasa的NLU管道和对话策略
+
+# The config recipe.
+recipe: default.v1  # Rasa配置版本
+
+# The assistant project unique identifier
+# This default value must be replaced with a unique assistant name within your deployment
+assistant_id: atguigu_ecs  # 助手唯一标识
+
+language: zh # 语言设置
+
+
+# ========== NLU Pipeline ==========
+# 处理用户输入，理解意图和提取实体
+pipeline:
+#- name: CompactLLMCommandGenerator
+- name: SearchReadyLLMCommandGenerator  # LLM命令生成器
+  llm:
+    model_group: qwen    # 使用的模型组
+#    model_group: qwen3_8b  
+  flow_retrieval:
+    active: false # 禁用流程检索，默认使用的openai的Embedding模型 text-embedding-3-large，会要求 openai 的 key
+
+
+# ========== Policies ==========
+# 决定下一步执行什么动作
+# Configuration for Rasa Core.
+policies:
+- name: FlowPolicy    # 流程策略：管理业务流程
+- name: EnterpriseSearchPolicy   # 企业搜索策略：知识图谱检索
+  llm:
+    model_group: qwen
+  embeddings:
+    model_group: embedding_models
+  vector_store:
+    type: "addons.information_retrieval.GraphRAG"
+
+#- name: IntentlessPolicy  # 默认会调用 openai的 gpt-4o,，会要求 openai 的 key

@@ -1,0 +1,25 @@
+version: "3.1"
+
+
+responses:
+  utter_chitchat_response:
+    - text: "placeholder"
+      metadata:
+        rephrase: True
+        rephrase_prompt: |
+          你是一个友好的助手，能够帮助用户处理电商平台的售前咨询、订单管理、售后处理、物流查询等问题。
+          请对用户的闲聊生成一个简短的回复。
+          用户：{{current_input}}
+          助手：
+
+  utter_cannot_handle:
+    - text: "placeholder"
+      metadata:
+        rephrase: True
+        rephrase_prompt: |
+          你是一个友好的助手，能够帮助用户处理电商平台的售前咨询、订单管理、售后处理、物流查询等问题。
+          你无法处理当前用户的消息，简练告知用户你希望用户能重述。
+          上下文：
+          {{history}}
+          用户：{{current_input}}
+          助手：

@@ -1,0 +1,284 @@
+version: "3.1"
+
+# ========== Slots（槽位）==========
+# 槽位 = 对话状态变量，用于存储信息
+
+slots:
+  user_id:                    # 槽位名称
+    type: text                # 数据类型：text/float/bool/categorical/list
+    initial_value: "1001"     # 初始值
+    mappings:
+      - type: from_llm        # 值来源：from_llm（LLM提取）/ controlled（代码设置）
+
+  # goto，用于表示不同的查询条件，一个标志位
+  # 特殊槽位：用于传递查询条件
+  goto:        
+    type: text
+    mappings:
+      - type: controlled  
+
+  # order_id
+  order_id:
+    type: text
+    mappings:
+      - type: controlled #用户选择button后，执行setslot动作，由我们设置
+
+  # === 修改订单 ===
+  receive_id: # 收货信息ID
+    type: text
+    mappings:
+      - type: controlled
+
+  modify_content: # 要修改的内容
+    type: text
+
+  receiver_name: # 收货人姓名
+    type: text
+    mappings:
+      - type: from_llm
+
+  receiver_phone: # 收货人电话
+    type: text
+    mappings:
+      - type: from_llm
+
+  receive_province: # 收货省
+    type: text
+    mappings:
+      - type: controlled
+
+  receive_city: # 收货市
+    type: text
+    mappings:
+      - type: controlled
+
+  receive_district: # 收货区
+    type: text
+    mappings:
+      - type: controlled
+
+  receive_street_address: # 收货街道地址
+    type: text
+    mappings:
+      - type: from_llm
+
+  if_modify_continue: # 是否继续修改
+    type: bool
+
+  set_receive_info: # 是否设置收货信息
+    type: bool
+    mappings:
+      - type: controlled
+
+  # === 取消订单 ===
+  if_cancel_order: # 是否取消订单
+    type: bool
+
+
+# ========== Responses（响应）==========
+# 机器人回复模板
+
+responses:
+  utter_ask_user_id:  # 响应名称，utter_开头表示文本回复
+    - text: "请输入用户ID："  # 回复内容
+
+  # === 修改订单的相关响应 ===    
+  utter_ask_modify_content:  # 带按钮的响应
+    - text: "请选择要修改的内容"
+      buttons: # 按钮列表
+        - title: "收货人姓名"
+          payload: "/SetSlots(modify_content=收货人姓名)"   # 点击后发送的命令
+        - title: "收货人电话"
+          payload: "/SetSlots(modify_content=收货人电话)"
+        - title: "收货地址"
+          payload: "/SetSlots(modify_content=收货地址)"
+        - title: "取消"
+          payload: "/SetSlots(modify_content=false)"
+
+  utter_ask_receiver_name:
+    - text: "请输入收货人姓名"
+
+  utter_ask_receiver_phone:
+    - text: "请输入收货人电话"
+
+  utter_ask_receive_street_address:
+    - text: "请输入收货街道地址"
+
+  utter_ask_if_modify_continue:
+    - text: "是否继续修改其他信息？"
+      buttons:
+        - title: "是"
+          payload: "/SetSlots(if_modify_continue=true)"
+        - title: "否"
+          payload: "/SetSlots(if_modify_continue=false)"
+
+  # === 取消订单的响应 ===
+  utter_ask_if_cancel_order:
+    - text: "是否取消此订单？"
+      buttons:
+        - title: "是"
+          payload: "/SetSlots(if_cancel_order=true)"
+        - title: "否"
+          payload: "/SetSlots(if_cancel_order=false)"
+
+# ========== Actions（动作）==========
+# 声明可用的自定义动作
+
+actions:
+  - action_ask_order_id # 查询订单信息
+  - action_get_order_detail # 查询订单详情
+  # === 修改订单相关action ===
+  - action_ask_receive_id # 询问重新选择现有的收货信息，或修改并新建收货信息
+  - action_ask_receive_province # 询问收货省
+  - action_ask_receive_city # 询问收货市
+  - action_ask_receive_district # 询问收货区
+  - action_ask_set_receive_info # 询问确认修改收货信息
+  # === 取消订单相关action ===
+  - action_cancel_order # 取消订单
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 使用 rasa pro 的写法
+#
+#
+## ==== slots的格式要求 =======
+## user_id 为slot的名称
+##   type: slot的类型，有 text、float、bool、categorical、float、any、list
+##   initial_value: 可选，指定初始值
+##   mappings: 固定写法
+##     - type: 支持 from_llm、controlled
+#slots:
+#  # === 切换用户 ===
+#  user_id: # 用户ID
+#    type: text
+#    initial_value: "1001" # 设置初始值
+#    mappings:
+#      - type: from_llm
+#
+#  # === 查询订单 ===
+#  goto:
+#    type: text
+#
+#  order_id: # 订单ID
+#    type: text
+#    mappings:
+#      - type: controlled # 从action中获取值
+#
+#  # === 修改订单 ===
+#  receive_id: # 收货信息ID
+#    type: text
+#    mappings:
+#      - type: controlled
+#
+#  modify_content: # 要修改的内容
+#    type: text
+#
+#  receiver_name: # 收货人姓名
+#    type: text
+#    mappings:
+#      - type: from_llm
+#
+#  receiver_phone: # 收货人电话
+#    type: text
+#    mappings:
+#      - type: from_llm
+#
+#  receive_province: # 收货省
+#    type: text
+#    mappings:
+#      - type: controlled
+#
+#  receive_city: # 收货市
+#    type: text
+#    mappings:
+#      - type: controlled
+#
+#  receive_district: # 收货区
+#    type: text
+#    mappings:
+#      - type: controlled
+#
+#  receive_street_address: # 收货街道地址
+#    type: text
+#    mappings:
+#      - type: from_llm
+#
+#  if_modify_continue: # 是否继续修改
+#    type: bool
+#
+#  set_receive_info: # 是否设置收货信息
+#    type: bool
+#    mappings:
+#      - type: controlled
+#
+#  # === 取消订单 ===
+#  if_cancel_order: # 是否取消订单
+#    type: bool
+#
+#responses:
+#  # === 切换用户的响应 ===
+#  utter_ask_user_id:
+#    - text: "请输入 user_id"
+#
+#  # === 修改订单的相关响应 ===
+#  utter_ask_modify_content:
+#    - text: "请选择要修改的内容"
+#      buttons:
+#        - title: "收货人姓名"
+#          payload: "/SetSlots(modify_content=收货人姓名)"
+#        - title: "收货人电话"
+#          payload: "/SetSlots(modify_content=收货人电话)"
+#        - title: "收货地址"
+#          payload: "/SetSlots(modify_content=收货地址)"
+#        - title: "取消"
+#          payload: "/SetSlots(modify_content=false)"
+#
+#  utter_ask_receiver_name:
+#    - text: "请输入收货人姓名"
+#
+#  utter_ask_receiver_phone:
+#    - text: "请输入收货人电话"
+#
+#  utter_ask_receive_street_address:
+#    - text: "请输入收货街道地址"
+#
+#  utter_ask_if_modify_continue:
+#    - text: "是否继续修改其他信息？"
+#      buttons:
+#        - title: "是"
+#          payload: "/SetSlots(if_modify_continue=true)"
+#        - title: "否"
+#          payload: "/SetSlots(if_modify_continue=false)"
+#
+#  # === 取消订单的响应 ===
+#  utter_ask_if_cancel_order:
+#    - text: "是否取消此订单？"
+#      buttons:
+#        - title: "是"
+#          payload: "/SetSlots(if_cancel_order=true)"
+#        - title: "否"
+#          payload: "/SetSlots(if_cancel_order=false)"
+#
+#actions:
+#  # === 查询订单相关action ===
+#  - action_ask_order_id # 询问要查询的订单
+#  - action_get_order_detail # 获取订单详情
+#  # === 修改订单相关action ===
+#  - action_ask_receive_id # 询问重新选择现有的收货信息，或修改并新建收货信息
+#  - action_ask_receive_province # 询问收货省
+#  - action_ask_receive_city # 询问收货市
+#  - action_ask_receive_district # 询问收货区
+#  - action_ask_set_receive_info # 询问确认修改收货信息
+#  # === 取消订单相关action ===
+#  - action_cancel_order # 取消订单

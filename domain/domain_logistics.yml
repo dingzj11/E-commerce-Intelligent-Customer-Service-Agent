@@ -1,0 +1,91 @@
+version: "3.1"
+
+# ========== Slots（槽位）==========
+# 槽位 = 对话状态变量，用于存储信息
+slots: 
+  # 物流id
+  logistics_id:
+      type: text
+      mappings:
+        - type: controlled
+
+  # 物流投诉内容
+  logistics_complaint:
+    type: text
+    mappings:
+      - type: controlled
+
+  # 其他物流投诉内容
+  other_logistics_complaint:
+      type: text
+      mappings:
+        - type: from_llm # 从用户的输入获取值
+
+responses:
+    utter_ask_other_logistics_complaint:
+      - text: "请详细描述 {logistics_id} 遇到的问题"
+
+actions:
+  - action_get_logistics_companys # 查询支持的快递公司列表
+  - action_get_logistics_info     # 查询指定订单的详细物流信息
+  - action_ask_logistics_complaint # 查询投诉原因列表，返回button给用户选择
+  - action_record_logistics_complaint # 记录投诉信息到数据库中
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 使用 rasa pro 的写法,slots定义中一些参数名和对应值都是固定的，不要自行猜测
+#slots:
+#  # === 查询物流 ===
+#  logistics_id: # 物流ID
+#    type: text
+#    mappings:
+#      - type: controlled
+#
+#  # === 投诉物流 ===
+#  logistics_complaint: # 物流投诉内容
+#    type: text
+#    mappings:
+#      - type: controlled
+#
+#  other_logistics_complaint: # 其他物流投诉内容
+#    type: text
+#    mappings:
+#      - type: from_llm
+#
+#responses:
+#  # === 投诉物流 ===
+#  utter_ask_other_logistics_complaint:
+#    - text: "请详细描述 {logistics_id} 遇到的问题"
+#
+#actions:
+#  # === 查询承运商 ===
+#  - action_get_logistics_companys # 获取支持的承运商
+#  # === 查询物流 ===
+#  - action_get_logistics_info # 获取物流信息
+#  # === 投诉物流 ===
+#  - action_ask_logistics_complaint # 询问投诉的内容
+#  - action_record_logistics_complaint # 记录投诉信息

@@ -1,0 +1,27 @@
+version: "3.1"
+# 使用 rasa pro 的写法
+slots:
+  # === 申请售后 ===
+  order_detail_ids: # 要进行售后的订单明细ID
+    type: text
+
+  postsale_type: # 售后类型
+    type: text
+
+  postsale_reason: # 售后原因
+    type: text
+
+  other_postsale_reason: # 其他售后原因
+    type: text
+
+responses:
+  # === 申请售后的响应，询问售后原因 ===
+  utter_ask_other_postsale_reason:
+    - text: "请描述 {logistics_id} 申请售后的原因"
+
+actions:
+  # === 申请售后的相关action ===
+  - action_ask_order_detail_ids # 选择要进行售后的订单明细ID
+  - action_ask_postsale_type # 选择售后类型
+  - action_ask_postsale_reason # 选择售后原因
+  - action_commit_postsale # 提交售后申请

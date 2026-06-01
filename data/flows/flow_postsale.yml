@@ -1,0 +1,47 @@
+# 申请售后：选择订单、商品（部分/全部）、询问原因、确认资格（7天内无理由、未拆封、未使用）、等待商家或平台审核、执行（如有优惠券可退优惠券）、人工介入（不符合退货资格、高价值商品、声称未收到但物流显示已签收）
+
+flows:
+  # 售后处理流程，严格按照以下设定的业务流程
+  postsale:
+    name: 售后处理
+    description: 退款、退货、换货
+    steps:
+      - set_slots: # 查询已签收、售后中、已完成的订单
+          - goto: action_ask_order_id_after_delivered # goto的值设为action_ask_order_id_after_delivered
+      - collect: order_id # button展示给用户，用户选择一个订单
+        next:
+          - if: slots.order_id != "false"
+            then: get_order_detail # 跳转到id为get_order_detail的步骤，显示订单详情
+          - else: END
+      - id: get_order_detail # 查询此订单的详情
+        action: action_get_order_detail
+      - collect: order_detail_ids # 自动调用action_ask_order_detail_ids，选择要进行售后的订单明细ID，button显示订单中的商品
+        next:
+          - if: slots.order_detail_ids != "false"
+            then: select_postsale_type # 跳转到id为select_postsale_type的步骤，选择售后类型
+          - else: END
+      - id: select_postsale_type # 选择售后类型
+        collect: postsale_type # 收集售后类型，自动调用action_ask_postsale_type，button显示售后类型
+        ask_before_filling: true # 清空槽位重新填充
+        next:
+          - if: slots.postsale_type != "false"
+            then: select_postsale_reason # 跳转到id为select_postsale_reason的步骤，选择售后原因
+          - else: END
+      - id: select_postsale_reason # 选择售后原因
+        collect: postsale_reason # 收集售后原因，自动调用action_ask_postsale_reason，button显示售后原因
+        ask_before_filling: true # 清空槽位重新填充
+        next:
+          - if: slots.postsale_reason == "other"
+            then:
+              - collect: other_postsale_reason # 询问其他售后原因，自动调用utter_ask_other_postsale_reason
+                ask_before_filling: true # 清空槽位重新填充
+                next: commit_postsale # 跳转到id为commit_postsale的步骤，提交售后申请
+          - if: slots.postsale_reason != "false" # 如果选择的售后原因不为false，且不是其他，是列出的原因选项
+            then: commit_postsale # 跳转到id为commit_postsale的步骤，提交售后申请
+          - else: END # 结束流程
+      - id: commit_postsale # 提交售后申请
+        action: action_commit_postsale
+        next:
+          - if: slots.order_detail_ids # 如果有订单明细ID，则继续选择售后类型
+            then: select_postsale_type # 跳转到id为select_postsale_type的步骤，选择售后类型
+          - else: END # 结束流程

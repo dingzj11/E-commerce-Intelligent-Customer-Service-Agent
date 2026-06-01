@@ -1,0 +1,18 @@
+flows:
+  pattern_chitchat:
+    description: 用于修复偏离主题的互动，而不会打断主要对话的对话修复流程
+    name: pattern chitchat
+    steps:
+      - action: utter_chitchat_response
+
+  pattern_search:
+    description: 处理知识库问答的流程
+    name: pattern search
+    steps:
+      - action: action_trigger_search
+
+  pattern_cannot_handle:
+    description: 处理命令生成失败场景的对话修复流程
+    name: pattern_cannot_handle
+    steps:
+      - action: utter_cannot_handle

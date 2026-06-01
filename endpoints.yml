@@ -1,0 +1,115 @@
+# 定义外部服务连接（分布式部署配置）
+# This file contains the different endpoints your bot can use.
+
+# Server where the models are pulled from.
+# https://rasa.com/docs/rasa-pro/production/model-storage#fetching-models-from-a-server
+
+#models:
+#  url: http://my-server.com/models/default_core@latest
+#  wait_time_between_pulls:  10   # [optional](default: 100)
+
+# Server which runs your custom actions.
+# https://rasa.com/docs/rasa-pro/concepts/custom-actions
+
+# ========== Action服务 ==========
+action_endpoint:
+  actions_module: "actions" # 自定义Action模块路径
+
+# ========== Tracker Store（对话状态存储）==========
+# 使用 Redis 存储对话状态，支持 Rasa 多实例部署
+# 默认使用内存存储，单实例下可以。多实例下必须使用外部存储（Redis/MongoDB）
+# https://rasa.com/docs/rasa-pro/production/tracker-stores
+tracker_store:
+    type: redis
+    url: ${REDIS_HOST:-localhost}
+    port: ${REDIS_PORT:-6379}
+    db: ${REDIS_TRACKER_DB:-1}
+    password: ${REDIS_PASSWORD:-}
+    key_prefix: "rasa_tracker:"
+    use_ssl: ${REDIS_SSL:-false}
+    # 连接超时配置
+    socket_timeout: 5
+    socket_connect_timeout: 5
+
+# ========== Lock Store（分布式锁存储）==========
+# 防止多个 Rasa 实例同时处理同一对话
+# https://rasa.com/docs/rasa-pro/production/lock-stores
+lock_store:
+    type: redis
+    url: ${REDIS_HOST:-localhost}
+    port: ${REDIS_PORT:-6379}
+    db: ${REDIS_LOCK_DB:-2}
+    password: ${REDIS_PASSWORD:-}
+    key_prefix: "rasa_lock:"
+    socket_timeout: 5
+    socket_connect_timeout: 5
+
+# ========== Event Broker（事件总线）==========
+# 将所有对话事件流式推送到消息队列，用于:
+# - 实时分析 / 监控大盘
+# - 审计日志（合规要求）
+# - 下游系统集成（CRM、工单系统）
+# https://rasa.com/docs/rasa-pro/production/event-brokers
+
+# Pulsar 事件总线（推荐——高吞吐、持久化）
+# event_broker:
+#   type: pulsar
+#   service_url: ${PULSAR_URL:-pulsar://localhost:6650}
+#   topic: rasa_events
+
+# Kafka 事件总线
+# event_broker:
+#   type: kafka
+#   security_protocol: SASL_PLAINTEXT
+#   topic: rasa_events
+#   url: ${KAFKA_BROKER:-localhost:9092}
+#   sasl_username: ${KAFKA_USERNAME}
+#   sasl_password: ${KAFKA_PASSWORD}
+
+# Redis Pub/Sub 事件总线（轻量级方案）
+event_broker:
+  type: redis
+  url: ${REDIS_HOST:-localhost}
+  port: ${REDIS_PORT:-6379}
+  db: ${REDIS_EVENT_BROKER_DB:-3}
+  password: ${REDIS_PASSWORD:-}
+  key_prefix: "rasa_event:"
+  socket_timeout: 5
+
+# The lines below activate contextual rephrasing, using the default OpenAI language model.
+# Ensure the OPENAI_API_KEY is set to prevent any missing API key errors.
+# For more details, refer to the documentation:
+# https://rasa.com/docs/rasa-pro/concepts/contextual-response-rephraser
+# ========== NLG服务（响应生成）==========
+nlg:
+  type: rephrase    # 重写类型
+  llm:
+    model_group: qwen
+
+# ========== 模型组定义 ==========
+model_groups:
+  - id: qwen
+    models:
+      - provider: self-hosted
+        model: qwen-plus-2025-07-28
+        api_base: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        api_key: ${API_KEY}
+
+#  - id: qwen3_8b
+#    models:
+#      - provider: self-hosted
+#        model: Qwen3-8B-sft
+#        api_base: "http://<your-vllm-host>:8000/v1"
+
+  - id: embedding_models
+    models:
+      - model: bge-base-zh-v1.5   # 向量模型组
+        api_base: "http://localhost:10010"
+        api_key: ${API_KEY}
+
+# ========== 向量存储配置 ==========
+vector_store:
+  neo4j_url: "neo4j://127.0.0.1"
+  neo4j_auth:
+    - ${NEO4J_USER:-neo4j}
+    - ${NEO4J_PASSWORD:-your_password}

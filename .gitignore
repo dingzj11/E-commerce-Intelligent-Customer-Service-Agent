@@ -1,0 +1,62 @@
+# ==================== Environment ====================
+.env
+.env.local
+*.env
+!.env.example
+
+# ==================== Python ====================
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+*.so
+.Python
+*.eggs/
+*.whl
+
+# ==================== IDE ====================
+.idea/
+.vscode/
+.claude/
+*.swp
+*.swo
+*~
+
+# ==================== Rasa ====================
+.rasa/cache/
+models/*.tar.gz
+models/*.tar.gz.asc
+
+# ==================== Model Weights ====================
+*.bin
+*.pth
+*.ckpt
+*.h5
+*.pb
+*.onnx
+*.safetensors
+graph/checkpoint/
+graph/pretrained/
+graph/.accelerate/
+
+# ==================== Logs ====================
+*.log
+logs/
+graph/logs/
+
+# ==================== OS ====================
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ==================== Temp ====================
+tmp/
+temp/
+*.tmp
+*.bak

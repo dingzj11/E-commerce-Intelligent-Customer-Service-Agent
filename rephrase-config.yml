@@ -1,0 +1,6 @@
+prompt_template: default_rephrase_prompt_template.jina2
+llm:
+    provider: self-hosted
+    model: qwen-turbo
+    api_base: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    api_key: ${API_KEY}

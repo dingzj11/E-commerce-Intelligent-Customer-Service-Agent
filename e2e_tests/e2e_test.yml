@@ -1,0 +1,97 @@
+test_cases:
+  - test_case: mIwEYkJvEimdv_u_AAAB
+    steps:
+    - user: "切换用户1002"
+    - utter: utter_can_do_something_else
+    - user: "有哪些快递？"
+    - bot: "支持的快递有:\n- 中通\n- 圆通\n- 申通\n- 邮政\n- 韵达\n- 顺丰"
+    - utter: utter_can_do_something_else
+
+
+  - test_case: CEJIg_H9xwh3fVejAAAD
+    steps:
+    - user: "切换用户1002"
+    - utter: utter_can_do_something_else
+    - user: "查询物流"
+    - bot: "支持的快递有:\n- 中通\n- 圆通\n- 申通\n- 邮政\n- 韵达\n- 顺丰"
+    - utter: utter_can_do_something_else
+    - user: "查询物流信息"
+    - bot: "请选择订单"
+    - user: "/SetSlots(order_id=ord1fb9104693ca44cf)"
+    - bot: "- **订单ID**：ord1fb9104693ca44cf\n  - 心理学入门 × 1\n- **物流ID**：lgt1d8fe15a6125402b\n- **物流信息**：\n  - 2025-08-15 06:39:47 台湾省台中市西屯区 已揽收\n  - 2025-08-15 06:57:27 离开 台湾省台中市西屯区，发往 广东省肇庆市\n  - 2025-08-15 10:47:01 到达 广东省肇庆市\n  - 2025-08-15 11:09:00 离开 广东省肇庆市，发往 河北省廊坊市"
+    - utter: utter_can_do_something_else
+
+
+  - test_case: Dn6Hf39ch0c_clOaAAAF
+    steps:
+    - user: "切换用户1002"
+    - utter: utter_can_do_something_else
+    - user: "投诉物流"
+    - bot: "请选择订单"
+    - user: "/SetSlots(order_id=orda99820ade0464f3a)"
+    - bot: "- **订单ID**：orda99820ade0464f3a\n  - 进口巧克力礼盒 × 2\n- **物流ID**：lgt2ed9e1857ac74487\n- **物流信息**：\n  - 2025-08-14 02:25:34 吉林省白山市江源区 已揽收\n  - 2025-08-14 03:19:27 离开 吉林省白山市江源区，发往 甘肃省临夏回族自治州\n  - 2025-08-14 05:37:43 到达 甘肃省临夏回族自治州\n  - 2025-08-14 05:51:11 离开 甘肃省临夏回族自治州，发往 西藏自治区那曲地区\n  - 2025-08-14 09:48:49 到达 西藏自治区那曲地区\n  - 2025-08-14 10:22:03 离开 西藏自治区那曲地区，发往 台湾省台南市\n  - 2025-08-14 11:53:14 到达 台湾省台南市\n  - 2025-08-14 12:03:18 离开 台湾省台南市，发往 台湾省苗栗县\n  - 2025-08-14 13:10:26 到达 台湾省苗栗县大湖乡\n  - 2025-08-14 14:18:31 台湾省苗栗县大湖乡南京街h座 钱玲15013308567 派送中\n  - 2025-08-14 15:38:50 台湾省苗栗县大湖乡南京街h座 已签收"
+    - bot: "请选择要反馈的问题："
+    - user: "/SetSlots(logistics_complaint=货不对板)"
+    - bot: "您的投诉已经收到，我们会尽快处理。"
+    - utter: utter_can_do_something_else
+
+
+  - test_case: XhnLT8IBmouA_jTOAAAH
+    steps:
+    - user: "切换用户1002"
+    - utter: utter_can_do_something_else
+    - user: "帮我看下订单"
+    - bot: "请选择订单"
+    - user: "/SetSlots(order_id=ord380932be81b8473d)"
+    - bot: "- [待发货]**订单ID**：ord380932be81b8473d\n  - 创建时间：2025-08-25 05:05:31\n  - 支付时间：2025-08-25 05:14:57\n- **订单明细**：\n  - 投影仪 × 1 |                 1599.00-1388.68=210.32\n  - **合计**：1599.0-1388.68=210.32\n- **收货信息**：\n  - 收货人：詹燕\n  - 联系电话：13395990373\n  - 收货地址：安徽省                淮北市                相山区                张街r座"
+    - utter: utter_can_do_something_else
+
+  - test_case: Q0zvrH5NHoRn9z-wAAAJ
+    steps:
+    - user: "切换用户1002"
+    - utter: utter_can_do_something_else
+    - user: "帮我改下收货地址"
+    - bot: "请选择订单"
+    - user: "/SetSlots(order_id=ord082d79601a5d451a)"
+    - bot: "- [待发货]**订单ID**：ord082d79601a5d451a\n  - 创建时间：2025-08-22 04:32:46\n  - 支付时间：2025-08-22 04:42:12\n- **订单明细**：\n  - 移动硬盘1TB × 2 |                 798.00-57.04=740.96\n  - 显示器27寸 × 1 |                 1299.00-269.67=1029.33\n  - 经济学原理 × 1 |                 88.00-50.46=37.54\n  - **合计**：2185.0-377.17=1807.83\n- **收货信息**：\n  - 收货人：刘文\n  - 联系电话：18005172660\n  - 收货地址：台湾省                苗栗县                大湖乡                南京街h座"
+    - bot: "请选择现有的收货信息，或修改并新建收货信息"
+    - user: "/SetSlots(receive_id=rec98caf5d442994abe)"
+    - bot: "- 收货人姓名：詹燕\n- 联系电话：13395990373\n- 收货省份：安徽省\n- 收货城市：淮北市\n- 收货城区：相山区\n- 收货地址：张街r座"
+    - bot: "是否确认修改？"
+    - user: "/SetSlots(set_receive_info=true)"
+    - bot: "订单收货信息已修改"
+    - utter: utter_can_do_something_else
+
+  - test_case: cjxFRmlFEGVZ6IE1AAAL
+    steps:
+      - user: "切换用户1002"
+      - utter: utter_can_do_something_else
+      - user: "取消订单"
+      - bot: "请选择订单"
+      - user: "/SetSlots(order_id=orde9d0a6464b354966)"
+      - bot: "- [待支付]**订单ID**：orde9d0a6464b354966\n  - 创建时间：2025-08-21 19:50:35\n- **订单明细**：\n  - 双人床 × 1 |                 1599.00-1191.18=407.82\n  - 英语学习教材 × 1 |                 65.00-62.54=2.46\n  - 婴儿安全座椅 × 4 |                 2796.00-376.02=2419.98\n  - **合计**：4460.0-1629.74=2830.26\n- **收货信息**：\n  - 收货人：詹燕\n  - 联系电话：13395990373\n  - 收货地址：安徽省                淮北市                相山区                张街r座"
+      - utter: utter_ask_if_cancel_order
+      - user: "/SetSlots(if_cancel_order=true)"
+      - bot: "订单已取消"
+      - utter: utter_can_do_something_else
+
+  - test_case: W3mDJTd5KpJPrvCJAAAN
+    steps:
+    - user: "申请售后"
+    - bot: "未查询到订单"
+    - utter: utter_can_do_something_else
+    - user: "切换用户1002"
+    - utter: utter_can_do_something_else
+    - user: "申请售后"
+    - bot: "请选择订单"
+    - user: "/SetSlots(order_id=ordfab7beb551bb4a4d)"
+    - bot: "- [已完成]**订单ID**：ordfab7beb551bb4a4d\n  - 创建时间：2025-08-21 10:00:14\n  - 支付时间：2025-08-21 10:04:12\n  - 签收时间：2025-08-22 15:48:08\n  - 完成时间：2025-08-22 16:12:22\n- **订单明细**：\n  - 儿童故事书 × 1 |                 35.00-19.60=15.40\n  - 书桌 × 1 |                 499.00-277.16=221.84\n  - **合计**：534.0-296.76000000000005=237.24\n- **收货信息**：\n  - 收货人：刘文\n  - 联系电话：18005172660\n  - 收货地址：台湾省                苗栗县                大湖乡                南京街h座\n- **最近物流信息**：\n  - 2025-08-22 15:48:07 台湾省苗栗县大湖乡南京街h座 已签收"
+    - bot: "- [审核中]**售后ID**：ptsf2718cdd1d0a4147\n- **订单明细**：\n  -儿童故事书 × 1\n- **退款金额**：15.40"
+    - bot: "请选择要申请售后的订单明细"
+    - user: "/SetSlots(order_detail_ids=ordde2b40e56576e497b)"
+    - bot: "- ordde2b40e56576e497b                    \n- 书桌 × 1                    \n- 499.00-277.16=221.84                    \n  请选择售后类型"
+    - user: "/SetSlots(postsale_type=换货)"
+    - bot: "- ordde2b40e56576e497b                    \n- 书桌 × 1                    \n- 499.00-277.16=221.84                    \n  请选择售后原因"
+    - user: "/SetSlots(postsale_reason=组装困难)"
+    - bot: "您的换货申请已提交，审核结果将在48小时内通知您"
+    - utter: utter_can_do_something_else

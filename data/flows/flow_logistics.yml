@@ -1,0 +1,130 @@
+flows:
+  # 查询支持的快递公司
+  query_logistics_companys:
+    name: 查询支持的快递公司
+    description: 查询支持的快递公司
+    steps:
+      - action: action_get_logistics_companys
+
+  # 查询物流：查询进行中订单的物流信息
+  query_shipping_order_logistics:
+      name: 查询进行中订单的物流信息
+      description: 查询进行中订单的物流信息
+      steps:
+          # 让用户选订单信息 得到订单号
+        - set_slots:
+            - goto: action_ask_order_id_shipped # goto是一个slot，值用于表示不同的标志，“action_ask_order_id_shipped”只是自己起的一个名字
+        - collect: order_id
+          next:
+            - if: slots.order_id != "false"
+              then:
+                - action: action_get_logistics_info
+                  next: END
+            - else: END
+
+
+  # 投诉物流：选择某个订单对应的物流进行投诉，询问投诉内容，提交投诉
+  logistics_complaint:
+    name: 投诉物流
+    description: 投诉物流
+    steps:
+        - set_slots:
+            - goto: action_ask_order_id_shipped_delivered # 标志为：已发货、已签收
+        - collect: order_id
+          next:
+            - if: slots.order_id != "false"
+              then: get_logistics_info
+            - else: END
+        - id: get_logistics_info
+          action: action_get_logistics_info
+        - collect: logistics_complaint # 写一个action，查mysql，返回button给用户选择
+          next:
+            - if: slots.logistics_complaint = "other"
+              then: # 收集用户输入的投诉内容
+                - collect: other_logistics_complaint
+                  description: 详细的投诉内容
+                  force_slot_filling: true # 忽略任何其他命令，仅处理收集槽的命令，直到该 slot 填写完成，常用于收集反馈、评论等不可被打断的信息
+                - action: action_record_logistics_complaint
+                  next: END
+            - if: slots.logistics_complaint != "false"
+              then:
+                - action: action_record_logistics_complaint
+                  next: END
+            - else: END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 查询承运商：列出所有支持的快递公司
+## 查询物流：查询进行中订单的物流信息
+## 投诉物流：选择某个订单对应的物流进行投诉，询问投诉内容，提交投诉
+#
+#flows:
+#  # === 查询承运商的flow，严格按照以下设定的业务流程 ===
+#  query_logistics_companys:
+#    name: 查询支持的快递公司
+#    description: 查询支持的快递公司
+#    steps:
+#      - action: action_get_logistics_companys
+#
+#  # === 查询已发货订单的物流信息的flow，严格按照以下设定的业务流程 ===
+#  query_shipping_order_logistics:
+#    name: 查询进行中订单的物流信息
+#    description: 查询订单的物流信息
+#    steps:
+#      - set_slots: # 查询已发货的订单
+#          - goto: action_ask_order_id_shipped # goto的值设为action_ask_order_id_shipped，表示已发货
+#      - collect: order_id # button展示给用户，用户选择一个订单
+#        next: # 用户订单后的处理
+#          - if: slots.order_id != "false"
+#            then:
+#              - action: action_get_logistics_info # 查询此订单的物流信息
+#                next: END
+#          - else: END
+#
+#  # === 投诉物流的flow，严格按照以下设定的业务流程 ===
+#  logistics_complain:
+#    name: 投诉物流
+#    description: 投诉物流
+#    steps:
+#      - set_slots: # 查询已发货和已签收的订单
+#          - goto: action_ask_order_id_shipped_delivered # goto的值设为action_ask_order_id_shipped_delivered
+#      - collect: order_id # button展示给用户，用户选择一个订单
+#        next: # 用户订单后的处理
+#          - if: slots.order_id != "false" # 选择的订单id不是false，进行下一步
+#            then: get_logistics_info  # 跳转到id为get_logistics_info的步骤
+#          - else: END # 选择的订单id是false，结束流程
+#      - id: get_logistics_info # id为get_logistics_info的步骤
+#        action: action_get_logistics_info # 执行action：查询此订单id对应的物流信息
+#      - collect: logistics_complaint # 选择投诉内容 # 通过buttons展示常见投诉理由，用户选择一个投诉内容
+#        next: # 用户选择button后的处理
+#          - if: slots.logistics_complaint = "other" # 如果投诉内容为其他，询问详细投诉内容
+#            then:
+#              - collect: other_logistics_complaint # 询问详细投诉内容
+#                description: 详细的投诉内容
+#                force_slot_filling: true # 忽略任何其他命令，仅处理收集槽的命令，直到该 slot 填写完成，常用于收集反馈、评论等不可被打断的信息
+#              - action: action_record_logistics_complaint # 记录投诉信息
+#                next: END
+#          - if: slots.logistics_complaint != "false" # 如果投诉内容不为false，即为预设的button内容，记录投诉信息
+#            then:
+#              - action: action_record_logistics_complaint # 记录投诉信息
+#                next: END #结束流程
+#          - else: END # 如果投诉内容为false，直接结束流程
