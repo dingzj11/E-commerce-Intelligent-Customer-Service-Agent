@@ -182,39 +182,12 @@ rasa run --enable-api
 | **NLP** | Transformers, jieba |
 | **Test Data** | Faker |
 
-## Interview Knowledge Points (面试知识点)
-
-If you're using this project on your resume, here are the key concepts to be familiar with:
-
-### Redis
-- **Cache Penetration, Breakdown, Avalanche** (缓存穿透/击穿/雪崩) — all three protections implemented
-- **Distributed Lock**: `SET NX EX` atomic operation, Lua script release, Watchdog auto-renewal
-- **Redlock Algorithm**: multi-instance majority-vote lock (antirez proposal + Martin Kleppmann critique)
-- **Optimistic Locking (WATCH/MULTI/EXEC)** vs **Pessimistic Locking (Distributed Lock)**
-- **Redis Data Structures**: HyperLogLog (UV), BitMap (sign-in), GEO (nearby stores)
-- **Pipeline**: reduce RTT, not the same as MULTI/EXEC transaction
-
-### AI Agent
-- **CALM**: Conversational AI with Language Models — flow-based dialogue
-- **GraphRAG**: hybrid retrieval (vector + full-text) + LLM Text-to-Cypher
-- **LLM Fine-tuning**: Qwen3-8B LoRA PEFT
-- **Embedding**: dense retrieval with bi-encoder models
-- **Multi-turn Dialogue**: slot filling, intent classification, entity extraction
-
-### System Design
-- **Distributed ID Generation**: Snowflake algorithm
-- **Rate Limiting**: sliding window counter pattern
-- **Idempotency**: request de-duplication in distributed systems
-- **Connection Pool**: SQLAlchemy QueuePool configuration
-- **Configuration Management**: environment-variable-driven, 12-factor app compliant
-
----
 
 <a name="chinese"></a>
 
 ## 项目简介
 
-基于 **Rasa Pro (CALM)** 构建的生产级**电商智能客服聊天机器人**，集成了 **GraphRAG 知识检索** 和企业级 **Redis 分布式基础设施**。系统涵盖客服全流程：订单管理、物流追踪、售后服务（退款/退货/换货）以及知识型商品问答。
+基于 **Rasa Pro (CALM)** 构建的生产级**电商智能客服聊天机器人**，集成了 **GraphRAG 知识检索** 和 **Redis 分布式基础设施**。系统涵盖客服全流程：订单管理、物流追踪、售后服务（退款/退货/换货）以及知识型商品问答。
 
 > **核心价值**: 展示 AI Agent 系统中的**后端工程深度** — NLP 管线、对话管理、知识图谱、分布式系统模式、LLM 集成。
 
