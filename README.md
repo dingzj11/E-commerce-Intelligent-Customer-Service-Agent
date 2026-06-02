@@ -91,19 +91,6 @@
 | 延迟队列 | Redis ZSET range-by-score | 定时任务，无需独立消息队列 |
 | Stream | Redis Stream + Consumer Groups | 事件驱动异步处理 |
 
-## 生产级模式对比
-
-| 关注点 | 朴素做法 | 本项目 |
-|--------|---------|--------|
-| **缓存** | 直接 Redis GET/SET | 三层防护：空值缓存(穿透)、互斥锁(击穿)、TTL 随机化(雪崩) |
-| **锁** | 无 / `threading.Lock` | Redlock 多实例 + Lua 原子释放 + 看门狗自动续期 |
-| **限流** | 无 / 全局计数器 | 滑动窗口：按用户 + IP + 操作类型 |
-| **配置** | 硬编码字符串 | Dataclass 层级 + 环境变量 + `.env` 回退 (Docker/K8s 就绪) |
-| **LLM 集成** | 直接 API 调用 | Command Generator 模式 + 降级 + GraphRAG 验证管线 |
-| **数据安全** | 无去重 | 幂等键 Redis SET NX + TTL 过期 |
-| **错误处理** | `try/except: pass` | 优雅降级 (Redis 不可用 → 跳过缓存，不崩溃) |
-| **测试** | print 语句 | 结构化 E2E 对话测试 + 槽位断言 |
-
 > **系统设计面试视角**：如果在系统设计面试中被问到"设计一个电商智能客服系统"，这个项目就是你的答案。详见 [`core/distributed_lock.py`](core/distributed_lock.py) 中 Redlock 算法的原理解析，以及 [`core/cache_decorator.py`](core/cache_decorator.py) 中缓存策略对比。
 
 ## 系统架构
