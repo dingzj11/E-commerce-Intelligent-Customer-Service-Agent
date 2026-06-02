@@ -4,361 +4,47 @@
 [![Neo4j](https://img.shields.io/badge/Neo4j-5.x-008CC1?logo=neo4j)](https://neo4j.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-# 电商智能客服 Agent (E-commerce Intelligent Customer Service Agent)
-
-[English](#english) | [中文](#chinese)
-
----
-
-<a name="english"></a>
-
-## Overview
-
-A production-grade **e-commerce intelligent customer service chatbot** built on **Rasa Pro (CALM)** with **GraphRAG** knowledge retrieval and enterprise-level **Redis distributed infrastructure**. The system handles the full customer service lifecycle: order management, logistics tracking, after-sales (returns/refunds/exchanges), and knowledge-based product Q&A.
-
-> **Highlight**: Designed specifically to demonstrate **backend engineering depth** in AI agent systems — covering NLP pipeline, dialogue management, knowledge graph, distributed systems patterns, and LLM integration.
-
-## Demo: Real Conversation Trace
-
-> From `e2e_tests/e2e_test.yml` — a 6-turn after-sales exchange conversation with auto-approval.
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
- 👤 User    "申请售后"  (Apply for after-sales service)
-
- 🤖 Bot     [↗ MySQL: query active orders for user 1002]
-            [↗ Redis: rate-limit check passed]
-            "Please select an order"
-
- 👤 User    /SetSlots(order_id=ordfab7beb551bb4a4d)
-
- 🤖 Bot     [↗ MySQL: order detail + 10-point logistics trace]
-            - Children's Story Book × 1 | $35.00
-            - Desk × 1                  | $499.00
-            "Please select item(s) for after-sales"
-
- 👤 User    /SetSlots(order_detail_ids=ordde2b40e56576e497b)
-
- 🤖 Bot     [↗ Redis: distributed lock acquired "aftersale:create:ordde2b..."]
-            [↗ Redis: idempotency check via SET NX]
-            Desk × 1 | $499.00 → $221.84 after discount
-            "Select after-sales type"
-
- 👤 User    /SetSlots(postsale_type=换货)  (Exchange)
-
- 🤖 Bot     "Select reason"
-
- 👤 User    /SetSlots(postsale_reason=组装困难)  (Assembly difficulty)
-
- 🤖 Bot     [↗ MySQL: 7-day return window check → within window ✓]
-            [↗ Redis: sliding-window rate limit for aftersales → ok]
-            "Your exchange request has been submitted. Result within 48 hours."
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-> ✓ 6-turn multi-intent conversation  &nbsp;|&nbsp;  ✓ 7-day no-reason policy auto-enforced  &nbsp;|&nbsp;  ✓ Redis distributed lock + idempotency  &nbsp;|&nbsp;  ✓ Rate limiting at 3 levels
-
-## Design Philosophy
-
-**The core question this project explores**: How do you build a production-grade AI agent that is not just a thin wrapper around an LLM API, but a layered system where every component — NLU, dialogue management, knowledge retrieval, business logic, and infrastructure — is designed for reliability and observability?
-
-Most "LLM chatbot" projects wire LangChain to an API and call it done. This project deliberately avoids that trap. Instead, it answers three specific systems-design questions:
-
-1. **Dialogue Reliability** — When an LLM hallucinates an intent, how does the system recover?  
-   **Answer**: Flow-based dialogue (Rasa CALM) with deterministic guardrails, not free-form LLM generation.
-
-2. **Knowledge Grounding** — How do you query a product catalog with 100K+ SKUs without hallucinating prices or availability?  
-   **Answer**: GraphRAG with Text-to-Cypher validation pipeline: *generate → validate → correct → execute*.
-
-3. **Infrastructure Safety** — What prevents duplicate refunds if a user clicks "submit" twice?  
-   **Answer**: Distributed lock + idempotency keys + rate limiting, all implemented from first principles on Redis.
-
-## Key Features
-
-### Conversational AI
-| Feature | Tech | Description |
-|---------|------|-------------|
-| **Flow-based Dialogue** | Rasa Pro CALM | Deterministic multi-turn flows with LLM-augmented intent matching |
-| **Multi-intent NLU** | LLM Command Generator (Qwen-Plus) | Natural language understanding without fixed intent taxonomies |
-| **Contextual Rephrasing** | NLG Response Rephraser | LLM rewrites bot responses for natural, context-aware output |
-| **Multi-turn Slot Filling** | Custom Actions | Structured data collection with conditional branching |
-
-### Knowledge Retrieval (GraphRAG)
-| Feature | Tech | Description |
-|---------|------|-------------|
-| **Hybrid Retrieval** | Neo4j Vector + Full-text | Combines semantic similarity with keyword matching for Chinese text |
-| **Text-to-Cypher (T2C)** | LLM → Validate → Correct → Execute | 4-stage pipeline: generate Cypher, validate syntax, correct errors, execute |
-| **Chinese Embedding** | BGE-base-zh-v1.5 + FastAPI | Dedicated embedding microservice with batch inference |
-| **Entity Linking** | LLM Label Router | Automatic node type routing + entity extraction from free text |
-
-### Distributed Systems (Redis)
-| Feature | Technique | Why It Matters |
-|---------|-----------|----------------|
-| **Distributed Lock** | SET NX PX + Lua atomic release + Watchdog renewal + Redlock | Prevents race conditions across multiple service instances |
-| **Cache Strategy** | 3-layer: null-cache (penetration), mutex (breakdown), TTL jitter (avalanche) | Classic cache problems solved with textbook patterns |
-| **Rate Limiter** | Sliding window counter (user / IP / global) | Per-operation granularity without a centralized gateway |
-| **Idempotency** | Redis SET NX request de-duplication | Exactly-once semantics for mutating operations |
-| **Distributed ID** | Snowflake-like ID generator | Ordered, unique IDs without DB auto-increment |
-| **Bloom Filter** | Redis BitMap-based | Pre-filter non-existent keys before cache/DB lookup |
-| **Delay Queue** | Redis ZSET range-by-score | Scheduled task execution without a dedicated MQ |
-| **Event Stream** | Redis Stream + Consumer Groups | Event-driven architecture for async processing |
-
-### Business Actions
-- **Order Management**: Query, cancel, modify shipping address
-- **Logistics Tracking**: Real-time tracking, carrier listing, complaint filing
-- **After-Sales**: Refund/return/exchange with auto-approval (7-day policy)
-- **Data Generation**: Faker-based test data with realistic distributions (10K+ users, 50K+ orders)
-
-### NLP Models (`graph/`)
-- Intent Classification (BERT-based)
-- Spell Checking (BERT + T5)
-- Information Extraction (UIE — Universal Information Extraction)
-
-## Production Patterns
-
-| Concern | Naive Approach | This Project |
-|---------|---------------|--------------|
-| **Caching** | Direct Redis GET/SET | 3-layer protection: null-cache (penetration), mutex lock (breakdown), TTL jitter (avalanche) |
-| **Locking** | None / `threading.Lock` | Redlock multi-instance + Lua atomic release + Watchdog auto-renewal |
-| **Rate Limiting** | None / single global counter | Sliding window: per-user + per-IP + per-operation |
-| **Configuration** | Hardcoded strings | Dataclass hierarchy + env vars + `.env` fallback (Docker/K8s ready) |
-| **LLM Integration** | Direct API call | Command Generator pattern with fallback + GraphRAG validation pipeline |
-| **Data Safety** | No dedup | Idempotency keys via Redis SET NX with TTL expiration |
-| **Error Handling** | `try/except: pass` | Graceful degradation (Redis unavailable → skip cache, don't crash) |
-| **Testing** | Print statements | Structured E2E conversation tests with slot-setting assertions |
-
-> **System Design Interview Perspective**: If asked "Design an e-commerce customer service chatbot" in a system design interview, this project demonstrates your answer. See inline comments in [`core/distributed_lock.py`](core/distributed_lock.py) for the Redlock algorithm explanation, and [`core/cache_decorator.py`](core/cache_decorator.py) for cache strategy comparison.
-
-## Architecture
-
-```
-                         ┌──────────────────────────┐
-                         │     User (WebSocket/      │
-                         │     REST/WeChat)          │
-                         └────────────┬─────────────┘
-                                      │
-                         ┌────────────▼─────────────┐
-                         │    Rasa Pro Server        │
-                         │  ┌─────────────────────┐  │
-                         │  │  NLU Pipeline        │  │
-                         │  │  (LLM Command Gen)   │  │
-                         │  ├─────────────────────┤  │
-                         │  │  Dialogue Policies   │  │
-                         │  │  (FlowPolicy +       │  │
-                         │  │   EnterpriseSearch)  │  │
-                         │  └─────────────────────┘  │
-                         └──┬──────────┬──────────┬──┘
-                            │          │          │
-              ┌─────────────▼──┐  ┌───▼────┐  ┌─▼──────────────┐
-              │  Custom Actions │  │ Redis  │  │  GraphRAG       │
-              │  (Order/Log/    │  │ (Lock/ │  │  (Neo4j + LLM)  │
-              │   Postsale)     │  │ Cache/ │  │                  │
-              └───────┬─────────┘  │ Rate/  │  └─────┬────────────┘
-                      │            │ Stream)│        │
-              ┌───────▼─────────┐  └───────┘  ┌─────▼────────────┐
-              │  MySQL           │             │  Embedding       │
-              │  (Orders/Users/  │             │  Service         │
-              │   Products)      │             │  (FastAPI/BGE)   │
-              └─────────────────┘             └──────────────────┘
-```
-
-### Request Lifecycle (e.g., "Cancel Order")
-
-```
-  User ──> FlowPolicy ──> action_cancel_order()
-              │                    │
-              │ (1) LLM intent     │ (2) Redis distributed lock
-              │     classification │     acquire "order:cancel:{id}"
-              │     ~200ms         │     ~5ms
-              │                    │
-              │ (3) GraphRAG query │ (4) MySQL read (cached)
-              │     for policy     │     ~8ms from Redis
-              │     check ~350ms   │
-              │                    │ (5) MySQL write + cache evict
-              │                    │     ~15ms
-              │                    │
-              │ (6) Rate limiter   │ (7) Redis lock release
-              │     sliding window │     Lua atomic script
-              │     check passes   │
-              │                    ▼
-              └──────────────> Response to user (~600ms total)
-```
-
-## Project Structure
-
-```
-Smart-Service-Online/
-├── actions/                     # Rasa Custom Actions
-│   ├── db.py                    #   Database connection pool (SQLAlchemy 2.0)
-│   ├── db_table_class.py        #   ORM models (Order, User, Product, Logistics...)
-│   ├── action_order.py          #   Order management (query, cancel, modify address)
-│   ├── action_logistics.py      #   Logistics tracking + complaint filing
-│   └── action_postsale.py       #   After-sales (refund/return/exchange)
-│
-├── core/                        # Redis Distributed Infrastructure
-│   ├── config.py                #   Centralized config dataclass (50+ parameters)
-│   ├── redis_client.py          #   Redis client (Pipeline/Lua/HyperLogLog/BitMap/GEO)
-│   ├── distributed_lock.py      #   Distributed lock + Redlock (with interview notes)
-│   ├── distributed_id.py        #   Snowflake-like ID generator
-│   ├── cache_decorator.py       #   @cacheable decorator with 3-layer protection
-│   ├── rate_limiter.py          #   Sliding window counter (user/IP/operation)
-│   ├── idempotency.py           #   Request de-duplication via SET NX
-│   ├── redis_bloom.py           #   Bloom filter for cache penetration prevention
-│   ├── redis_delay_queue.py     #   ZSET-based delayed task execution
-│   ├── redis_stream.py          #   Stream processing with consumer groups
-│   └── redis_transaction.py     #   Redis transactions (Watch/Multi/Exec)
-│
-├── addons/                      # Rasa Extensions
-│   ├── information_retrieval.py #   GraphRAG: T2C pipeline (route→retrieve→generate→validate→execute)
-│   ├── embed_service.py         #   Embedding model HTTP API (FastAPI + BGE)
-│   └── create_indexing.py       #   Neo4j vector + fulltext index builder
-│
-├── graph/                       # NLP Models
-│   ├── src/models/              #   BERT intent classify, BERT+T5 spell check
-│   ├── src/preprocess/          #   Data preprocessing pipelines
-│   ├── src/runner/              #   Unified Trainer / Predictor framework
-│   ├── src/datasync/            #   MySQL ↔ Neo4j data synchronization
-│   └── external_lib/uie_pytorch/#   Universal Information Extraction (fine-tune + inference)
-│
-├── data/flows/                  # Dialogue flow definitions (YAML)
-├── domain/                      # Domain config: intents, entities, slots, responses
-├── e2e_tests/                   # End-to-end conversation tests
-├── examples/                    # Usage examples (prompt templates, schema tests)
-├── scripts/                     # Utility scripts (model download)
-├── gen_data.py                  # Test data generator (Faker, 10K+ users)
-├── config.yml                   # Rasa NLU pipeline & policies
-├── endpoints.yml                # External services configuration
-├── credentials.yml              # Channel credentials
-└── requirements.txt             # Python dependencies (30 packages)
-```
-
-## Performance Characteristics
-
-| Metric | Target | Method |
-|--------|--------|--------|
-| Intent classification | < 200ms | LLM Command Generator (Qwen-Plus) |
-| Knowledge retrieval (GraphRAG) | < 500ms | Hybrid vector + full-text via Neo4j, with T2C validation |
-| Order query (cached) | < 10ms | Redis cache hit + connection pool |
-| Order query (uncached) | < 50ms | MySQL indexed query, connection pool |
-| Rate limit check | < 2ms | Redis Lua script, sliding window |
-| Distributed lock acquire | < 5ms | SET NX PX with retry (3x max, exponential backoff) |
-| Embedding inference | < 50ms/text | BGE-base-zh-v1.5, batch size 64 |
-
-## Quick Start
-
-### Prerequisites
-
-- Python 3.10+
-- Redis 7.0+
-- MySQL 8.0+
-- Neo4j 5.x+
-- [Rasa Pro License](https://rasa.com/rasa-pro/) (free for development)
-
-### Setup
-
-```bash
-# 1. Clone
-git clone https://github.com/dingzj11/E-commerce-Intelligent-Customer-Service-Agent.git
-cd E-commerce-Intelligent-Customer-Service-Agent
-
-# 2. Install — 30+ dependencies covering Rasa Pro, Redis, Neo4j, NLP, LLM frameworks
-pip install -r requirements.txt
-
-# 3. Configure — 50+ parameters with sensible defaults (see core/config.py for dataclass hierarchy)
-cp .env.example .env
-# Edit .env with your API keys, DB credentials, cache TTLs, and rate limits
-
-# 4. Download NLP model weights (BGE embedding ~400MB, BERT classifiers ~200MB each)
-bash scripts/download_models.sh
-
-# 5. Bring up infrastructure — Redis (cache/lock/queue), MySQL (orders/users), Neo4j (knowledge graph)
-#    Redis 7.0+  : caching, distributed locks, rate limiting, streams, delay queues
-#    MySQL 8.0+  : order/user/product relational data
-#    Neo4j 5.x+   : product knowledge graph for GraphRAG retrieval
-
-# 6. Generate test data (10K users, 50K orders, realistic distributions)
-python gen_data.py
-
-# 7. Build Neo4j indexes (vector + fulltext) and start embedding service on :8000
-cd addons
-python create_indexing.py
-python embed_service.py &
-
-# 8. Train and start Rasa
-cd ..
-rasa train
-rasa run --enable-api
-
-# 9. Run E2E tests to verify everything works
-rasa test e2e --e2e-tests e2e_tests/
-```
-
-## Technology Stack
-
-| Category | Technologies |
-|----------|-------------|
-| **Dialogue Framework** | Rasa Pro 3.10+ (CALM) |
-| **LLM** | Qwen-Plus / Qwen3-8B (with LoRA fine-tuning) |
-| **Embedding** | BGE-base-zh-v1.5 (Sentence Transformers) |
-| **Graph Database** | Neo4j 5.x |
-| **Relational DB** | MySQL 8.0 + SQLAlchemy 2.0 (connection pooling, read/write splitting) |
-| **Cache / Lock / Queue** | Redis 7.0 (Standalone / Sentinel / Cluster) |
-| **Web Framework** | FastAPI + Uvicorn (embedding microservice) |
-| **NLP** | Transformers, jieba (Chinese tokenization) |
-| **Test Data** | Faker (Chinese locale, realistic distributions) |
-
-
-<a name="chinese"></a>
+# 电商智能客服 Agent
 
 ## 项目简介
 
 基于 **Rasa Pro (CALM)** 构建的生产级**电商智能客服聊天机器人**，集成了 **GraphRAG 知识检索** 和 **Redis 分布式基础设施**。系统涵盖客服全流程：订单管理、物流追踪、售后服务（退款/退货/换货）以及知识型商品问答。
 
-> **核心价值**: 展示 AI Agent 系统中的**后端工程深度** — NLP 管线、对话管理、知识图谱、分布式系统模式、LLM 集成。
+> **核心价值**: 展示 AI Agent 系统中的**后端工程深度** — NLU 管线、对话管理、知识图谱、分布式系统模式、LLM 集成。
 
-## 演示：真实对话流程
+## 功能展示
 
-> 来自 `e2e_tests/e2e_test.yml` — 6轮售后换货对话，含自动审核。
+### 订单管理
 
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**查询订单** — 列出进行中和3日内完成的订单，查看详情
 
- 👤 用户    "申请售后"
+![查询订单](images/查询订单.png)
 
- 🤖 机器人  [↗ MySQL: 查询用户1002的进行中订单]
-            [↗ Redis: 限流检查通过]
-            "请选择订单"
+**取消订单** — 取消待支付或待发货的订单，二次确认防止误操作
 
- 👤 用户    /SetSlots(order_id=ordfab7beb551bb4a4d)
+![取消订单](images/取消订单.png)
 
- 🤖 机器人  [↗ MySQL: 订单详情 + 10节点物流轨迹]
-            - 儿童故事书 × 1 | 35.00元
-            - 书桌 × 1       | 499.00元
-            "请选择要售后的商品"
+**修改订单收货信息** — 支持选择已有地址或新建地址，分步收集省/市/区/街道
 
- 👤 用户    /SetSlots(order_detail_ids=ordde2b40e56576e497b)
+![修改收货信息-步骤1](images/修改订单收货信息-1.png)
 
- 🤖 机器人  [↗ Redis: 分布式锁已获取 "aftersale:create:ordde2b..."]
-            [↗ Redis: 幂等性检查 SET NX 通过]
-            书桌 × 1 | 499.00元 → 221.84元 (折扣后)
-            "请选择售后类型"
+![修改收货信息-步骤2](images/修改订单收货信息-2.png)
 
- 👤 用户    /SetSlots(postsale_type=换货)
+### 物流服务
 
- 🤖 机器人  "请选择原因"
+**查询物流信息** — 查看订单实时物流轨迹
 
- 👤 用户    /SetSlots(postsale_reason=组装困难)
+![查询物流信息](images/查询物流信息.png)
 
- 🤖 机器人  [↗ MySQL: 7天无理由退货检查 → 在窗口期内 ✓]
-            [↗ Redis: 售后滑动窗口限流 → 通过]
-            "您的换货申请已提交，48小时内反馈处理结果。"
+**投诉物流** — 选择问题类型提交物流投诉
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
+![投诉物流](images/投诉物流.png)
 
-> ✓ 6轮多意图对话 &nbsp;|&nbsp; ✓ 7天无理由自动审核 &nbsp;|&nbsp; ✓ Redis 分布式锁 + 幂等性 &nbsp;|&nbsp; ✓ 三级限流保护
+### 售后服务
+
+**申请售后** — 支持退货/退款/换货，7天无理由自动审核
+
+![申请售后](images/申请售后.png)
 
 ## 设计哲学
 
@@ -378,16 +64,20 @@ rasa test e2e --e2e-tests e2e_tests/
 ## 核心亮点
 
 ### 对话 AI
-- **Flow 流程对话**: Rasa Pro CALM 多轮对话管理，LLM 增强意图匹配
-- **LLM 意图识别**: Qwen-Plus 驱动的命令生成器，无需固定意图分类体系
-- **上下文重述**: NLG 自然语言响应生成，上下文感知
-- **多轮槽位填充**: 结构化数据采集，支持条件分支
+| 功能 | 技术 | 说明 |
+|------|------|------|
+| **Flow 流程对话** | Rasa Pro CALM | 确定性多轮对话管理，LLM 增强意图匹配 |
+| **LLM 意图识别** | Qwen-Plus 命令生成器 | 无需固定意图分类体系，自然语言理解 |
+| **上下文重述** | NLG 响应重述器 | LLM 重写机器人回复，上下文感知 |
+| **多轮槽位填充** | 自定义 Action | 结构化数据采集，条件分支 |
 
 ### 知识检索 (GraphRAG)
-- **混合检索**: Neo4j 向量相似度 + 全文搜索，适配中文语义
-- **Text-to-Cypher (T2C)**: LLM 生成 → 验证 → 校正 → 执行，4阶段管线
-- **中文嵌入**: BGE-base-zh-v1.5 + FastAPI 专用嵌入微服务
-- **实体链接**: LLM 自动标签路由 + 实体抽取
+| 功能 | 技术 | 说明 |
+|------|------|------|
+| **混合检索** | Neo4j 向量 + 全文搜索 | 语义相似度 + 关键词匹配，适配中文 |
+| **Text-to-Cypher** | LLM → 验证 → 校正 → 执行 | 4阶段管线生成和校验 Cypher 查询 |
+| **中文嵌入** | BGE-base-zh-v1.5 + FastAPI | 专用嵌入微服务，批量推理 |
+| **实体链接** | LLM 标签路由 | 自动识别节点类型 + 实体抽取 |
 
 ### 分布式系统 (Redis)
 | 功能模块 | 技术实现 | 为什么重要 |
@@ -398,19 +88,8 @@ rasa test e2e --e2e-tests e2e_tests/
 | 幂等性 | Redis SET NX 请求去重 | 写操作的精确一次语义 |
 | 分布式 ID | Snowflake 雪花算法 | 有序唯一 ID，不依赖数据库自增 |
 | 布隆过滤器 | Redis BitMap 实现 | 查询前预过滤不存在的 Key |
-| 延迟队列 | Redis ZSET range-by-score | 定时任务执行，无需独立消息队列 |
+| 延迟队列 | Redis ZSET range-by-score | 定时任务，无需独立消息队列 |
 | Stream | Redis Stream + Consumer Groups | 事件驱动异步处理 |
-
-### 业务功能
-- 订单管理：查询、取消、修改收货地址
-- 物流追踪：实时轨迹、快递公司列表、投诉
-- 售后服务：退款/退货/换货（含 7 天无理由自动审核）
-- 数据生成：Faker 模拟真实分布的测试数据（1万+ 用户，5万+ 订单）
-
-### NLP 模型 (`graph/`)
-- 意图分类 (BERT)
-- 拼写纠错 (BERT + T5)
-- 通用信息抽取 (UIE)
 
 ## 生产级模式对比
 
@@ -460,6 +139,25 @@ rasa test e2e --e2e-tests e2e_tests/
               └─────────────────┘             └──────────────────┘
 ```
 
+### 请求生命周期（以"取消订单"为例）
+
+```
+  用户 ──> FlowPolicy ──> action_cancel_order()
+               │                    │
+               │ (1) LLM 意图分类   │ (2) Redis 分布式锁
+               │     ~200ms         │     获取 "order:cancel:{id}"
+               │                    │     ~5ms
+               │ (3) GraphRAG 查询  │ (4) MySQL 读取（缓存命中）
+               │     政策检查       │     ~8ms
+               │     ~350ms         │
+               │                    │ (5) MySQL 写入 + 缓存失效
+               │                    │     ~15ms
+               │ (6) 限流器         │ (7) Redis 释放锁
+               │     滑动窗口检查   │     Lua 原子脚本
+               │                    │
+               └──────────────> 响应用户 (~600ms)
+```
+
 ## 项目结构
 
 ```
@@ -496,6 +194,7 @@ Smart-Service-Online/
 │   ├── src/datasync/            #   MySQL ↔ Neo4j 数据同步
 │   └── external_lib/uie_pytorch/#   通用信息抽取 (微调 + 推理)
 │
+├── images/                      # 功能截图展示
 ├── data/flows/                  # 对话流程定义 (YAML)
 ├── domain/                      # 领域配置：意图、实体、槽位、响应
 ├── e2e_tests/                   # 端到端对话测试
@@ -585,6 +284,6 @@ rasa test e2e --e2e-tests e2e_tests/
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) file for details.
+本项目基于 MIT License 开源。详见 [LICENSE](LICENSE) 文件。
 
-> **Note**: Rasa Pro requires a separate license. This project only includes the configuration and custom code built on top of Rasa Pro.
+> **注意**: Rasa Pro 需要单独授权。本项目仅包含基于 Rasa Pro 构建的配置和自定义代码。
